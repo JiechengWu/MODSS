@@ -55,7 +55,7 @@ def train(args, device):
         epoch_max = args.num_epoch
         top_ratio = args.top_ratio
         for cnttt in range(200):
-            if this_ratio > 0.51:
+            if this_ratio > 0.11:
                 cnttt = cnttt - 1
                 break
             loss_doc = []
@@ -95,7 +95,28 @@ def train(args, device):
                     optimizer.step()
                     loss_doc.append(loss_total.item())
 
+                    with torch.no_grad():
+                        model.eval()
+                        acc = 0
+                        each_fea1 = []
+                        all_fea = []
+                        for v in range(num_view):
+                            each_fea1.append(fea[v][real_unlabel_index])
+                            all_fea.append(fea[v])
+                        _, _, _, label_class_specific_res, label_class_share_res, _, _, _, _ = model(each_fea1)
+                        class_res = torch.max(label_class_specific_res.softmax(dim=-1),
+                                              label_class_share_res.softmax(dim=-1))
+
+                        pred = torch.argmax(class_res, 1).cpu().detach().numpy()
+
+                        test_ACC = accuracy_score(labels[real_unlabel_index].detach().cpu().numpy(), pred)
+                        test_F1 = f1_score(labels[real_unlabel_index].detach().cpu().numpy(), pred, average='macro')
+
+                    pbar.set_postfix({'ACC_test': '{:.2f}'.format(test_ACC * 100),
+                                      'F1_test': '{:.2f}'.format(test_F1 * 100)})
                     pbar.update(1)
+
+
 
             # ==================  test ========================
             with torch.no_grad():

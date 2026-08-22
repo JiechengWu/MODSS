@@ -8,7 +8,7 @@ import pandas as pd
 
 
 def load_data(name, device):
-    data = sio.loadmat('./datasets/{0}/{1}'.format(name, name) + '.mat')
+    data = sio.loadmat('./datasets/{0}'.format(name) + '.mat')
 
     num_omics = len(data['X'][0])
     fea = []
